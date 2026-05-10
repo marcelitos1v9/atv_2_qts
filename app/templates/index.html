@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Biblioteca</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px;
+        background: #f5f5f5;
+      }
+      h1 {
+        color: #2c3e50;
+      }
+      h2 {
+        color: #34495e;
+      }
+      .form-group {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+      }
+      input[type="text"],
+      input[type="number"] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        flex: 1;
+        min-width: 120px;
+      }
+      button {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        background-color: #27ae60;
+        color: white;
+        font-size: 14px;
+      }
+      button:hover {
+        opacity: 0.9;
+      }
+      button.danger {
+        background-color: #e74c3c;
+      }
+      button.secondary {
+        background-color: #3498db;
+      }
+      button:disabled {
+        background-color: #95a5a6;
+        cursor: not-allowed;
+      }
+      #message {
+        margin: 8px 0;
+        padding: 8px;
+        border-radius: 4px;
+        min-height: 20px;
+      }
+      #message.success {
+        color: #27ae60;
+        background: #eafaf1;
+      }
+      #message.error {
+        color: #e74c3c;
+        background: #fdedec;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 4px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+      th {
+        background-color: #2c3e50;
+        color: white;
+        padding: 10px;
+        text-align: left;
+      }
+      td {
+        padding: 10px;
+        border-bottom: 1px solid #ecf0f1;
+      }
+      tr:last-child td {
+        border-bottom: none;
+      }
+      .badge {
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: bold;
+      }
+      .badge.available {
+        background: #eafaf1;
+        color: #27ae60;
+      }
+      .badge.unavailable {
+        background: #fdedec;
+        color: #e74c3c;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Biblioteca</h1>
+
+    <h2>Adicionar Livro</h2>
+    <div class="form-group">
+      <input type="text" id="title" placeholder="Título *" />
+      <input type="text" id="author" placeholder="Autor *" />
+      <input type="number" id="year" placeholder="Ano" min="0" max="2100" />
+      <input type="text" id="genre" placeholder="Gênero" />
+      <button id="add-book-btn" onclick="addBook()">Adicionar</button>
+    </div>
+    <div id="message"></div>
+
+    <h2>Pesquisar</h2>
+    <div class="form-group">
+      <input
+        type="text"
+        id="search"
+        placeholder="Pesquisar por título ou autor..."
+      />
+      <button id="search-btn" class="secondary" onclick="searchBooks()">
+        Pesquisar
+      </button>
+      <button class="secondary" onclick="loadBooks()">Mostrar Todos</button>
+    </div>
+
+    <h2>Livros</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Título</th>
+          <th>Autor</th>
+          <th>Ano</th>
+          <th>Gênero</th>
+          <th>Disponível</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="books-table"></tbody>
+    </table>
+
+    <script>
+      async function loadBooks() {
+        const response = await fetch("/books");
+        const books = await response.json();
+        renderBooks(books);
+      }
+
+      async function searchBooks() {
+        const query = document.getElementById("search").value;
+        const response = await fetch(
+          "/books?q=" + encodeURIComponent(query)
+        );
+        const books = await response.json();
+        renderBooks(books);
+      }
+
+      function renderBooks(books) {
+        const tbody = document.getElementById("books-table");
+        if (books.length === 0) {
+          tbody.innerHTML =
+            '<tr><td colspan="7" style="text-align:center;color:#999">Nenhum livro encontrado</td></tr>';
+          return;
+        }
+        tbody.innerHTML = books
+          .map(
+            (book) => `
+          <tr>
+            <td>${book.id}</td>
+            <td>${book.title}</td>
+            <td>${book.author}</td>
+            <td>${book.year || "-"}</td>
+            <td>${book.genre || "-"}</td>
+            <td>
+              <span class="badge ${book.available ? "available" : "unavailable"}">
+                ${book.available ? "Sim" : "Não"}
+              </span>
+            </td>
+            <td>
+              <button onclick="borrowBook(${book.id})" ${!book.available ? "disabled" : ""}>
+                Emprestar
+              </button>
+              <button onclick="returnBook(${book.id})" ${book.available ? "disabled" : ""}>
+                Devolver
+              </button>
+              <button class="danger" onclick="deleteBook(${book.id})">
+                Excluir
+              </button>
+            </td>
+          </tr>
+        `
+          )
+          .join("");
+      }
+
+      function showMessage(text, type) {
+        const el = document.getElementById("message");
+        el.textContent = text;
+        el.className = type;
+      }
+
+      async function addBook() {
+        const yearVal = document.getElementById("year").value;
+        const data = {
+          title: document.getElementById("title").value,
+          author: document.getElementById("author").value,
+          year: yearVal ? parseInt(yearVal) : null,
+          genre: document.getElementById("genre").value,
+        };
+        const response = await fetch("/books", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+        if (response.ok) {
+          showMessage("Livro adicionado com sucesso!", "success");
+          document.getElementById("title").value = "";
+          document.getElementById("author").value = "";
+          document.getElementById("year").value = "";
+          document.getElementById("genre").value = "";
+          loadBooks();
+        } else {
+          const err = await response.json();
+          const msg = err.errors ? err.errors.join(", ") : err.error;
+          showMessage("Erro: " + msg, "error");
+        }
+      }
+
+      async function borrowBook(id) {
+        const response = await fetch("/books/" + id + "/borrow", {
+          method: "POST",
+        });
+        if (!response.ok) {
+          const err = await response.json();
+          showMessage("Erro: " + err.error, "error");
+        } else {
+          showMessage("Livro emprestado!", "success");
+          loadBooks();
+        }
+      }
+
+      async function returnBook(id) {
+        const response = await fetch("/books/" + id + "/return", {
+          method: "POST",
+        });
+        if (!response.ok) {
+          const err = await response.json();
+          showMessage("Erro: " + err.error, "error");
+        } else {
+          showMessage("Livro devolvido!", "success");
+          loadBooks();
+        }
+      }
+
+      async function deleteBook(id) {
+        if (confirm("Confirmar exclusão?")) {
+          await fetch("/books/" + id, { method: "DELETE" });
+          loadBooks();
+        }
+      }
+
+      loadBooks();
+    </script>
+  </body>
+</html>
