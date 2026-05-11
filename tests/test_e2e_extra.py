@@ -94,7 +94,8 @@ def test_e2e_borrow_book_changes_status_to_nao(driver, flask_server):
         EC.element_to_be_clickable(
             (
                 By.XPATH,
-                "//td[text()='Livro Para Emprestar']/following-sibling::td//button[text()='Emprestar']",
+                "//td[text()='Livro Para Emprestar']"
+                "/following-sibling::td//button[text()='Emprestar']",
             )
         )
     )
