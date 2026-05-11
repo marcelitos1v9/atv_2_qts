@@ -55,8 +55,12 @@ def test_search_workflow_filters_correctly(client):
 
 def test_stats_reflect_borrow_state(client):
     """Verificar que as estatísticas refletem corretamente os livros emprestados."""
-    b1 = client.post("/books", json={"title": "B1", "author": "A", "year": 2010}).get_json()
-    b2 = client.post("/books", json={"title": "B2", "author": "A", "year": 2020}).get_json()
+    b1 = client.post(
+        "/books", json={"title": "B1", "author": "A", "year": 2010}
+    ).get_json()
+    b2 = client.post(
+        "/books", json={"title": "B2", "author": "A", "year": 2020}
+    ).get_json()
     client.post("/books", json={"title": "B3", "author": "A", "year": 2030})
 
     client.post(f"/books/{b1['id']}/borrow")

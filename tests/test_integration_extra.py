@@ -50,9 +50,7 @@ class TestBooksEndpointsIntegration:
         created = client.post(
             "/books", json={"title": "Antigo", "author": "Autor"}
         ).get_json()
-        resp = client.put(
-            f"/books/{created['id']}", json={"title": "Novo"}
-        )
+        resp = client.put(f"/books/{created['id']}", json={"title": "Novo"})
         assert resp.status_code == 200
         assert resp.get_json()["title"] == "Novo"
 
@@ -66,17 +64,13 @@ class TestBooksEndpointsIntegration:
         assert get_resp.status_code == 404
 
     def test_borrow_book_endpoint_sets_unavailable(self, client):
-        created = client.post(
-            "/books", json={"title": "B", "author": "A"}
-        ).get_json()
+        created = client.post("/books", json={"title": "B", "author": "A"}).get_json()
         resp = client.post(f"/books/{created['id']}/borrow")
         assert resp.status_code == 200
         assert resp.get_json()["available"] is False
 
     def test_return_book_endpoint_sets_available(self, client):
-        created = client.post(
-            "/books", json={"title": "B", "author": "A"}
-        ).get_json()
+        created = client.post("/books", json={"title": "B", "author": "A"}).get_json()
         client.post(f"/books/{created['id']}/borrow")
         resp = client.post(f"/books/{created['id']}/return")
         assert resp.status_code == 200

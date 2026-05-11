@@ -87,20 +87,19 @@ def test_e2e_borrow_book_changes_status_to_nao(driver, flask_server):
     driver.find_element(By.ID, "add-book-btn").click()
 
     wait.until(
-        EC.text_to_be_present_in_element(
-            (By.ID, "books-table"), "Livro Para Emprestar"
-        )
+        EC.text_to_be_present_in_element((By.ID, "books-table"), "Livro Para Emprestar")
     )
 
     borrow_btn = wait.until(
         EC.element_to_be_clickable(
-            (By.XPATH, "//td[text()='Livro Para Emprestar']/following-sibling::td//button[text()='Emprestar']")
+            (
+                By.XPATH,
+                "//td[text()='Livro Para Emprestar']/following-sibling::td//button[text()='Emprestar']",
+            )
         )
     )
     borrow_btn.click()
 
-    wait.until(
-        EC.text_to_be_present_in_element((By.ID, "books-table"), "Não")
-    )
+    wait.until(EC.text_to_be_present_in_element((By.ID, "books-table"), "Não"))
     table_text = driver.find_element(By.ID, "books-table").text
     assert "Não" in table_text
